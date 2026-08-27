@@ -15,7 +15,7 @@ export type OrderCreateRequest = {
 
 /**
  * 주문한 상품
- * 
+ *
  * - 위 `주문 생성 사용자 입력값` 의 items 항목
  */
 export type OrderItemRequest = {
@@ -29,7 +29,7 @@ export type OrderItemRequest = {
 //
 // --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 /**
- * 주문 생성/목록 API Response 타입
+ * 주문 생성 Response 타입
  */
 export type OrderResponse = {
   id: number;
@@ -37,8 +37,8 @@ export type OrderResponse = {
   zipCode: string;
   address: string;
   orderDate: string;
-  items: OrderItemResponse[]
-}
+  items: OrderItemResponse[];
+};
 
 /**
  * 주문한 상품 응답의 items 항목
@@ -47,6 +47,15 @@ export type OrderItemResponse = {
   productId: number;
   productName: string;
   quantity: number;
+  price: number;
 
-  // FIXME: backend 에서 price 내려주기
+
 };
+
+/**
+ * 목록 API Response 타입
+ */
+export type OrderListResponse = {
+  totalPages: number;
+  orders: OrderResponse[];
+}

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +21,14 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-
     //상품 등록용(create)
     public ProductResponse create(ProductCreateRequest request) {
+
+        //같은 상품이 존재하면 에러 던지게
+        if (productRepository.existsByName(request.name())) {
+            throw new ApiException(ErrorCode.PRODUCT_ALREADY_EXISTS);
+        }
+
         Product product = new Product(
                 request.name(),
                 request.price(),
@@ -55,7 +61,7 @@ public class ProductService {
 
     //상품 목록 조회
     @Transactional(readOnly = true)
-    public Page<Product> getProducts(int page, String direction) {
+    public Page<Product> getProducts(int page, String direction, String productName) {
 
         Sort sort = Sort.by(Sort.Direction.ASC, "id"); //기본 조회
 
@@ -66,8 +72,9 @@ public class ProductService {
         }
 
         Pageable pageable = PageRequest.of(page, 10, sort);
+        Specification<Product> spec = search(productName);
 
-        return productRepository.findAll(pageable);
+        return productRepository.findAll(spec, pageable);
     }
 
     public void deleteProduct(Long productId) {
@@ -78,6 +85,27 @@ public class ProductService {
         }
 
         productRepository.deleteById(productId);
+    }
+     //상품 단건 조회
+    public ProductResponse getProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ApiException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        return ProductResponse.from(product);
+    }
+
+    private Specification<Product> search(String kw) {
+        return (root, query, criteriaBuilder) -> {
+
+            if (kw == null || kw.trim().isEmpty()) {
+                return null;
+            }
+
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("name")),
+                    "%" + kw.toLowerCase() + "%"
+            );
+        };
     }
 }
 

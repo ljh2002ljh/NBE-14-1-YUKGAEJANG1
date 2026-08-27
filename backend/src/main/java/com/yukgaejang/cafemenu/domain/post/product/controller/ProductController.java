@@ -1,6 +1,7 @@
 package com.yukgaejang.cafemenu.domain.post.product.controller;
 
 import com.yukgaejang.cafemenu.domain.post.product.dto.ProductCreateRequest;
+import com.yukgaejang.cafemenu.domain.post.product.dto.ProductListResponse;
 import com.yukgaejang.cafemenu.domain.post.product.dto.ProductResponse;
 import com.yukgaejang.cafemenu.domain.post.product.entity.Product;
 import com.yukgaejang.cafemenu.domain.post.product.service.ProductService;
@@ -46,19 +47,25 @@ public class ProductController {
 
     //상품 목록 조회
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getProducts(
+    public ResponseEntity<ProductListResponse> getProducts(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "direction", required = false) String direction
+            @RequestParam(value = "direction", required = false) String direction,
+            @RequestParam(value = "productName", required = false) String productName
     ) {
 
-        Page<Product> paging = productService.getProducts(page, direction);
+        Page<Product> paging = productService.getProducts(page, direction, productName);
 
         List<ProductResponse> responses = paging.getContent()
                 .stream()
                 .map(ProductResponse::from)
                 .toList();
 
-        return ResponseEntity.status(HttpStatus.OK).body(responses);
+        ProductListResponse response = new ProductListResponse(
+                paging.getTotalPages(),
+                responses
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 
@@ -72,4 +79,14 @@ public class ProductController {
                 .status(HttpStatus.NO_CONTENT)
                 .build();
     }
+     //상품 단건 조회 매서드
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getProduct(
+            @PathVariable Long id
+    ) {
+        ProductResponse response = productService.getProduct(id);
+
+        return ResponseEntity.ok(response);
+    }
+
 }
