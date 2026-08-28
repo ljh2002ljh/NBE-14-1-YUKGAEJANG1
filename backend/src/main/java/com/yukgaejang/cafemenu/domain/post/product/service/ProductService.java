@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +72,11 @@ public class ProductService {
         }
 
         Pageable pageable = PageRequest.of(page, 8, sort);
+
+        if (productName == null || productName.trim().isEmpty()) {
+            return productRepository.findAll(pageable);
+        }
+
         return productRepository.findDistinctByNameContaining(productName, pageable);
     }
 
@@ -89,6 +95,20 @@ public class ProductService {
                 .orElseThrow(() -> new ApiException(ErrorCode.PRODUCT_NOT_FOUND));
 
         return ProductResponse.from(product);
+    }
+
+    private Specification<Product> search(String kw) {
+        return (root, query, criteriaBuilder) -> {
+
+            if (kw == null || kw.trim().isEmpty()) {
+                return null;
+            }
+
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("name")),
+                    "%" + kw.toLowerCase() + "%"
+            );
+        };
     }
 }
 
