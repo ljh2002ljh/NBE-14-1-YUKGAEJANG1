@@ -1,2 +1,2 @@
 export const API_BASE_URL =
-  'https://nbe-14-1-yukgaejang-production.up.railway.app/api/v1';
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080/api/v1';
